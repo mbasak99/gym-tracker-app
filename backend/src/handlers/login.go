@@ -17,14 +17,6 @@ func RegisterLoginRoutes(router *echo.Echo) {
 	router.POST("/login", logIn)
 }
 
-// func errorHandler(w http.ResponseWriter, output string, err error) {
-// 	if err != nil {
-// 		fmt.Fprint(w, output, err)
-// 	} else {
-// 		fmt.Fprint(w, output)
-// 	}
-// }
-
 func logIn(c echo.Context) error {
 	// grab email and password from req
 	err := c.Request().ParseForm()
