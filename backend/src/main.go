@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gym-tracker-backend/src/handlers"
 	"log"
 	"net/http"
 	"os"
@@ -11,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func home(c echo.Context) error {
+func Home(c echo.Context) error {
 	// fmt.Fprintln(w, "Hello World!")
 	return c.String(http.StatusOK, "Hello World!")
 }
@@ -30,8 +31,8 @@ func main() {
 	mux.Use(middleware.Recover())
 
 	// Load handlers
-	mux.GET("/", home)
-	// handlers.RegisterLoginRoutes(mux)
+	mux.GET("/", Home)
+	handlers.RegisterLoginRoutes(mux) // TODO: update and add the login/signup routes to new echo routes
 
 	fmt.Printf("Running on http://localhost%s\n", port)
 	// err = http.ListenAndServe(port, mux)

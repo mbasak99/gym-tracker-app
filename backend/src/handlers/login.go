@@ -4,63 +4,71 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var hashedPassword []byte
 
-func RegisterLoginRoutes(router *http.ServeMux) {
-	router.HandleFunc("POST /signup", signUp)
-	router.HandleFunc("POST /login", logIn)
+func RegisterLoginRoutes(router *echo.Echo) {
+	// router.HandleFunc("POST /signup", signUp)
+	// router.HandleFunc("POST /login", logIn)
+	router.POST("/signup", signUp)
+	router.POST("/login", logIn)
 }
 
-func errorHandler(w http.ResponseWriter, output string, err error) {
-	if err != nil {
-		fmt.Fprint(w, output, err)
-	} else {
-		fmt.Fprint(w, output)
-	}
-}
+// func errorHandler(w http.ResponseWriter, output string, err error) {
+// 	if err != nil {
+// 		fmt.Fprint(w, output, err)
+// 	} else {
+// 		fmt.Fprint(w, output)
+// 	}
+// }
 
-func logIn(w http.ResponseWriter, r *http.Request) {
+func logIn(c echo.Context) error {
 	// grab email and password from req
-	err := r.ParseForm()
+	err := c.Request().ParseForm()
 	if err != nil {
-		errorHandler(w, "Failed to parse request body. %+v\n", err)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read parameters.")
 	}
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	email := c.FormValue("email")
+	password := c.FormValue("password")
 
 	// TODO: check email exist in db and convert hashed password in table and compare
 	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password)) // change hashedPassword to hash from db
 	if err != nil {
-		errorHandler(w, "Invalid credentials. Please try again.\n", nil)
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide valid credentials.")
 	}
 
-	fmt.Fprintf(w, "Email: %s, Password: %s, Same?: %t", email, password, err == nil)
+	fmt.Printf("Email: %s, Password: %s, Same?: %t", email, password, err == nil)
+	return c.String(http.StatusOK, "Successfully logged in user.")
 }
 
-func signUp(w http.ResponseWriter, r *http.Request) {
+func signUp(c echo.Context) error {
 	// grab email and password from req
-	err := r.ParseForm()
+	err := c.Request().ParseForm()
 	if err != nil {
-		errorHandler(w, "Failed to parse request body. %+v\n", err)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read parameters.")
 	}
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+
+	if email == "" || password == "" {
+		// check values are valid
+		fmt.Printf("Email: %s | Password: %s\n", email, password)
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide valid credentials.")
+	}
 
 	// TODO: check if user already exists
 
 	// hash the password and store it to db
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		errorHandler(w, "Failed to hash password. %+v\n", err)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to hash password.")
 	}
-	// hashedPassword = hashedPass
+	hashedPassword = hashedPass // TODO: remove this
 
 	// w.Write([]byte("Hello from Log In"))
-	fmt.Fprintf(w, "Email: %s, Password: %s, HashedPW: %s", email, password, string(hashedPass))
+	fmt.Printf("Email: %s, Password: %s, HashedPW: %s", email, password, string(hashedPass))
+	return c.String(http.StatusCreated, "Successfully signed up user.")
 }
