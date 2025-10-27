@@ -1,0 +1,6 @@
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    name NVARCHAR(255) NOT NULL,
+    dob DATE NOT NULL,
+    joined DATE DEFAULT NOW()
+);

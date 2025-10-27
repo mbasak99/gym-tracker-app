@@ -4,15 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var hashedPassword []byte
+var (
+	hashedPassword []byte
+	db             *pgx.Conn
+)
 
-func RegisterLoginRoutes(router *echo.Echo) {
+func RegisterLoginRoutes(router *echo.Echo, dbConn *pgx.Conn) {
 	// router.HandleFunc("POST /signup", signUp)
 	// router.HandleFunc("POST /login", logIn)
+	db = dbConn
 	router.POST("/signup", signUp)
 	router.POST("/login", logIn)
 }

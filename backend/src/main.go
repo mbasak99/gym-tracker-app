@@ -1,16 +1,22 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"gym-tracker-backend/src/handlers"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+type ENV struct {
+	db *pgx.Conn
+}
 
 func Home(c echo.Context) error {
 	// fmt.Fprintln(w, "Hello World!")
@@ -25,6 +31,15 @@ func main() {
 		log.Fatalln("Failed to load .env file")
 	}
 	port := os.Getenv("PORT")
+
+	// TODO: Load DB conn here
+	ctx := context.Background()
+	connString := fmt.Sprintf("dbname=%s user=%s password=%s", os.Getenv("DB_URL"), os.Getenv("DB_USER"), os.Getenv("DB_PASS"))
+	conn, err := pgx.Connect(ctx, connString)
+	if err != nil {
+		log.Panicf("Failed to connect to database. %+v", err)
+	}
+	defer conn.Close(ctx)
 
 	// Load middlewares
 	mux.Use(middleware.Logger())
