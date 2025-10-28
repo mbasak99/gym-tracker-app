@@ -28,13 +28,18 @@ func main() {
 	mux := echo.New()
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalln("Failed to load .env file")
+		log.Println("No .env file found, using environment variables")
 	}
 	port := os.Getenv("PORT")
 
 	// TODO: Load DB conn here
 	ctx := context.Background()
-	connString := fmt.Sprintf("dbname=%s user=%s password=%s", os.Getenv("DB_URL"), os.Getenv("DB_USER"), os.Getenv("DB_PASS"))
+	connString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("DB_HOST"), // just "host.docker.internal"
+		os.Getenv("DB_PORT"), // "5432"
+		os.Getenv("DB_USER"), // "monark"
+		os.Getenv("DB_PASS"), // your password
+		os.Getenv("DB_NAME"))
 	conn, err := pgx.Connect(ctx, connString)
 	if err != nil {
 		log.Panicf("Failed to connect to database. %+v", err)
@@ -47,7 +52,7 @@ func main() {
 
 	// Load handlers
 	mux.GET("/", Home)
-	handlers.RegisterLoginRoutes(mux) // TODO: update and add the login/signup routes to new echo routes
+	handlers.RegisterLoginRoutes(mux, conn) // TODO: update and add the login/signup routes to new echo routes
 
 	fmt.Printf("Running on http://localhost%s\n", port)
 	// err = http.ListenAndServe(port, mux)
