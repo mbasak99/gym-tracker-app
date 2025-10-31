@@ -34,17 +34,19 @@ func main() {
 
 	// TODO: Load DB conn here
 	ctx := context.Background()
-	connString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("DB_HOST"), // just "host.docker.internal"
-		os.Getenv("DB_PORT"), // "5432"
-		os.Getenv("DB_USER"), // "monark"
-		os.Getenv("DB_PASS"), // your password
-		os.Getenv("DB_NAME"))
-	conn, err := pgx.Connect(ctx, connString)
+	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Panicf("Failed to connect to database. %+v", err)
 	}
 	defer conn.Close(ctx)
+
+	// Test DB connection and version
+	var version string
+	err = conn.QueryRow(ctx, "SELECT version()").Scan(&version)
+	if err != nil {
+		log.Panicf("Couldn't retrieve DB version. %+v", err)
+	}
+	log.Printf("Successfully connected to OrioleDB version: %s\n", version)
 
 	// Load middlewares
 	mux.Use(middleware.Logger())
